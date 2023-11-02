@@ -8,10 +8,10 @@ Nginx Development Environment based on official docker image and official source
 
 ```bash
 # build all with:
-build
+./build
 # or:
-build alpine
-build debian
+./build alpine
+./build debian
 ```
 
 ### Pull
