@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -a
+    . docker/.env
+set +a
+
+REPO="moujikov/nginx-docker-builder"
+
+build() {
+    local OS=$1
+    local TAG=${NGINX_VERSION}
+    if [ ${OS} != "debian" ]; then 
+        TAG+="-${OS}"
+    fi
+
+    local DIST=${REPO}:${TAG}
+
+    echo "Building: ${DIST}"
+    echo "For platform: ${OS} ${PLATFORM}"
+    echo "Using nginx: ${NGINX_SRC}, sha: ${NGINX_SHASUM}"
+
+    local BUILD_ARGS=$(cat docker/.env | sed '/^[[:space:]]*$/d' | tr '\n' ';' | \
+                       sed 's/;$//' | sed 's/^/ --build-arg /' | sed 's/;/ --build-arg /g' )
+
+    docker build ${BUILD_ARGS} --tag ${DIST} -f "docker/Dockerfile.${OS}" .
+}
+
+if [ -n "$1" ]; then
+    build $1 
+else
+    for file in docker/Dockerfile.*; do
+        build ${file##*/Dockerfile.}
+    done
+fi

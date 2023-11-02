@@ -1,0 +1,25 @@
+ARG NGINX_VERSION
+ARG PLATFORM
+
+FROM --platform=${PLATFORM} nginx:${NGINX_VERSION}-alpine
+
+ARG NGINX_SHASUM
+ARG NGINX_SRC
+
+RUN apk update && apk add --no-cache \
+        gcc make cmake autoconf automake libtool pkgconfig libc-dev linux-headers \
+        openssl-dev pcre2-dev zlib-dev libxslt-dev gd-dev geoip-dev libedit-dev \
+        findutils perl-dev bash
+
+SHELL ["/bin/bash", "-c"]
+
+RUN mkdir -p /usr/src && cd /usr/src && \
+    curl -L "${NGINX_SRC}" -o nginx.tar.gz && \
+    echo "${NGINX_SHASUM}  nginx.tar.gz" | shasum -c && \
+    tar -zxC /usr/src -f nginx.tar.gz && rm nginx.tar.gz && \
+    mv /usr/src/nginx-*/ /usr/src/nginx/ && cd /usr/src/nginx/ && \
+    touch configure.sh && chmod 755 configure.sh && \
+    printf '/usr/src/nginx/configure' >> configure.sh && \
+    nginx -V 2>&1 | sed -n -e 's/^.*arguments://p' | tr -d '\n' >> configure.sh
+
+CMD ["bash"]
